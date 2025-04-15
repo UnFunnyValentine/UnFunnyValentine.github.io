@@ -5,10 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Conference Network</title>
     <script>
-        window.location.href = 'auth.html';
+        // Check if user is already authenticated
+        const isAuthenticated = localStorage.getItem('isAuthenticated') || sessionStorage.getItem('isAuthenticated');
+        
+        if (isAuthenticated) {
+            // If authenticated, go to connections page
+            window.location.href = 'connections.html';
+        } else {
+            // If not authenticated, go to auth page
+            window.location.href = 'auth.html';
+        }
     </script>
 </head>
 <body>
-    <p>Redirecting to authentication page...</p>
+    <p>Loading...</p>
 </body>
 </html>
