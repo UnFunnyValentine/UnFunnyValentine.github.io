@@ -126,11 +126,12 @@
             // Log what we have
             console.log('Conference data in callback:', { conferenceId, conferenceName, conferenceLocation });
             
-            // Exchange code for token directly with LinkedIn
+            // Exchange code for token using LinkedIn directly (since we can't use localhost backend)
             fetch('https://www.linkedin.com/oauth/v2/accessToken', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded'
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'Access-Control-Allow-Origin': '*'
                 },
                 body: new URLSearchParams({
                     grant_type: 'authorization_code',
@@ -169,8 +170,8 @@
                 localStorage.setItem('conferenceName', conferenceName);
                 localStorage.setItem('conferenceLocation', conferenceLocation);
 
-                // Redirect to connections page
-                window.location.href = 'connections.html';
+                // Update redirect to use full path
+                window.location.href = '/docs/user/connections.html';
             })
             .catch(error => {
                 console.error('Error during authentication:', error);
