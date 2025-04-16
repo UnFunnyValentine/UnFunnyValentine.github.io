@@ -126,59 +126,65 @@
             // Log what we have
             console.log('Conference data in callback:', { conferenceId, conferenceName, conferenceLocation });
             
-            // Exchange code for token using our backend
-            fetch('https://unfunnyvalentine.github.io/docs/proxy/linkedin/token', {  // Updated API endpoint
+            // Exchange code for token directly with LinkedIn
+            fetch('https://www.linkedin.com/oauth/v2/accessToken', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/x-www-form-urlencoded'
                 },
-                body: JSON.stringify({
-                    code,
-                    redirect_uri: 'https://unfunnyvalentine.github.io/docs/user/callback.html'  // Updated redirect URI
+                body: new URLSearchParams({
+                    grant_type: 'authorization_code',
+                    code: code,
+                    client_id: LINKEDIN_CLIENT_ID,
+                    client_secret: LINKEDIN_CLIENT_SECRET,
+                    redirect_uri: REDIRECT_URI
                 })
             })
             .then(async response => {
-                // Handle the response from the server
                 const data = await response.json();
                 
-                // Check if the response is an error
-                if (data.status === 'error' || data.error) {
-                    throw new Error(data.message || data.error || 'Authentication failed');
+                if (!response.ok) {
+                    throw new Error(data.error_description || 'Failed to get access token');
                 }
 
-                // Store the user profile data
-                localStorage.setItem('linkedInUser', JSON.stringify(data));
+                // Store the access token
+                localStorage.setItem('linkedInAccessToken', data.access_token);
                 localStorage.setItem('isAuthenticated', 'true');
                 localStorage.setItem('authTime', new Date().toISOString());
+
+                // Get user profile using the access token
+                return fetch('https://api.linkedin.com/v2/me', {
+                    headers: {
+                        'Authorization': `Bearer ${data.access_token}`
+                    }
+                });
+            })
+            .then(response => response.json())
+            .then(profileData => {
+                // Store the user profile data
+                localStorage.setItem('linkedInUser', JSON.stringify(profileData));
 
                 // Store conference details
                 localStorage.setItem('conferenceId', conferenceId);
                 localStorage.setItem('conferenceName', conferenceName);
                 localStorage.setItem('conferenceLocation', conferenceLocation);
 
-                console.log('Stored conference details:', {
-                    conferenceId,
-                    conferenceName,
-                    conferenceLocation
-                });
-
-                // Redirect to the connections page with full path
-                const redirectUrl = sessionStorage.getItem('redirect_after_auth') || '/docs/user/connections.html';
-                window.location.href = redirectUrl;
+                // Redirect to connections page
+                window.location.href = 'connections.html';
             })
             .catch(error => {
                 console.error('Error during authentication:', error);
                 document.getElementById('statusMessage').textContent = 'Authentication failed. Please try again.';
                 document.getElementById('statusMessage').classList.add('error');
                 
-                // Redirect back to auth page after 3 seconds
+                // Update the redirect to be relative
                 setTimeout(() => {
-                    window.location.href = 'auth.html';
+                    window.location.href = './auth.html';
                 }, 3000);
             });
         } else {
-            // No code or error in URL, redirect back to auth page
-            window.location.href = 'auth.html';
+            // Update this redirect to be relative
+            window.location.href = './auth.html';
         }
     </script>
 </body>
