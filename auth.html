@@ -106,7 +106,7 @@
         function loginWithLinkedIn() {
             // LinkedIn OAuth Configuration
             const LINKEDIN_CLIENT_ID = '86bd4udvjkab6n';
-            const REDIRECT_URI = 'https://managedev6.dotbricks.net/UnFunnyValentine/callback.html';
+            const REDIRECT_URI = 'https://UnFunnyValentine.github.io/callback.html';
             
             // Required LinkedIn API scopes
             const LINKEDIN_SCOPES = [
@@ -142,7 +142,7 @@
                 `state=${encodeURIComponent(JSON.stringify(stateData))}`;
             
             // Redirect to LinkedIn login
-            window.location.href = linkedInAuthUrl;
+            window.location.href = `/callback.html?code=${code}&state=${encodeURIComponent(state)}`;
         }
         
         // LinkedIn Auth Button Event Listener
