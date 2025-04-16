@@ -79,7 +79,7 @@
         const LINKEDIN_CLIENT_SECRET = 'WPL_AP1.OgDnI5N7j6k3LOI2.3u7pLw==';
 
         // IMPORTANT: This must EXACTLY match what's in auth.html and what's registered in LinkedIn Developer Console
-        const REDIRECT_URI = 'https://managedev6.dotbricks.net/UnFunnyValentine/callback.html';
+        const REDIRECT_URI = 'https://UnFunnyValentine.github.io/callback.html';
 
         console.log('Callback using redirect URI:', REDIRECT_URI);
         
@@ -111,7 +111,7 @@
             
             // Redirect back to auth page after 3 seconds
             setTimeout(() => {
-                window.location.href = `auth.html?error=${error}&error_description=${encodeURIComponent(errorDescription || '')}`;
+                window.location.href = `/auth.html?error=${error}&error_description=${encodeURIComponent(errorDescription || '')}`;
             }, 3000);
         } else if (code) {
             // Exchange authorization code for access token using our backend
@@ -127,12 +127,15 @@
             console.log('Conference data in callback:', { conferenceId, conferenceName, conferenceLocation });
             
             // Exchange code for token using our backend
-            fetch('http://localhost:3000/api/linkedin/token', {
+            fetch('https://UnFunnyValentine.github.io/proxy/linkedin/token', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ code })
+                body: JSON.stringify({
+                    code,
+                    redirect_uri: 'https://UnFunnyValentine.github.io/callback.html'
+                })
             })
             .then(async response => {
                 // Handle the response from the server
@@ -160,8 +163,8 @@
                 });
 
                 // Redirect to the connections page or stored redirect URL
-                const redirectUrl = sessionStorage.getItem('redirect_after_auth') || 'connections.html';
-                window.location.href = redirectUrl;
+                const redirectUrl = sessionStorage.getItem('redirect_after_auth') || '/connections.html';
+                window.location.href = redirectUrl.startsWith('/') ? redirectUrl : `/${redirectUrl.replace(/^\/+/, '')}`;
             })
             .catch(error => {
                 console.error('Error during authentication:', error);
@@ -170,13 +173,13 @@
                 
                 // Redirect back to auth page after 3 seconds
                 setTimeout(() => {
-                    window.location.href = 'auth.html';
+                    window.location.href = '/auth.html';
                 }, 3000);
             });
         } else {
             // No code or error in URL, redirect back to auth page
-            window.location.href = 'auth.html';
+            window.location.href = '/auth.html';
         }
     </script>
 </body>
-</html> 
+</html>
