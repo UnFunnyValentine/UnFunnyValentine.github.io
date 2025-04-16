@@ -127,14 +127,14 @@
             console.log('Conference data in callback:', { conferenceId, conferenceName, conferenceLocation });
             
             // Exchange code for token using our backend
-            fetch('https://UnFunnyValentine.github.io/proxy/linkedin/token', {
+            fetch('https://unfunnyvalentine.github.io/docs/proxy/linkedin/token', {  // Updated API endpoint
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
                     code,
-                    redirect_uri: 'https://UnFunnyValentine.github.io/callback.html'
+                    redirect_uri: 'https://unfunnyvalentine.github.io/docs/user/callback.html'  // Updated redirect URI
                 })
             })
             .then(async response => {
@@ -163,7 +163,7 @@
                 });
 
                 // Redirect to the connections page with full path
-                const redirectUrl = sessionStorage.getItem('redirect_after_auth') || './connections.html';
+                const redirectUrl = sessionStorage.getItem('redirect_after_auth') || '/docs/user/connections.html';
                 window.location.href = redirectUrl;
             })
             .catch(error => {
