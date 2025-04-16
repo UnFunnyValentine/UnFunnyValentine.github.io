@@ -386,277 +386,28 @@
     </div>
 
     <script>
-        // Function to force a full page reload
-        function refreshPage() {
-            localStorage.removeItem('_temp_test');  // Force storage change
-            localStorage.setItem('_reload_timestamp', Date.now());  // Mark reload time
-            window.location.reload(true);  // true = force reload from server
-        }
-        
-        // Function to inject test data into localStorage
-        function fixTestData() {
-            // Clear existing data
-            clearAllData();
-            
-            // Create test user profile
-            const testProfile = {
-                id: 'linkedin_test_user',
-                name: 'Test User',
-                firstName: 'Test',
-                lastName: 'User',
-                email: 'test.user@example.com',
-                headline: 'Software Developer at Test Company',
-                industry: 'Technology',
-                location: 'New York',
-                pictureUrl: 'https://randomuser.me/api/portraits/men/1.jpg',
-                publicProfileUrl: 'https://linkedin.com/in/testuser',
-                lastLogin: new Date().toISOString()
-            };
-            
-            // Create test conference data
-            const testConferenceId = 'conf_tech_summit_2023';
-            const testConferenceName = 'Tech Summit 2023';
-            const testConferenceLocation = 'San Francisco, CA';
-            
-            // Save to localStorage
-            try {
-                localStorage.setItem('linkedInUser', JSON.stringify(testProfile));
-                localStorage.setItem('conferenceId', testConferenceId);
-                localStorage.setItem('conferenceName', testConferenceName);
-                localStorage.setItem('conferenceLocation', testConferenceLocation);
-                localStorage.setItem('isAuthenticated', 'true');
-                localStorage.setItem('authTime', new Date().toISOString());
-                
-                alert('Test data successfully set in localStorage. Refreshing page...');
-                setTimeout(refreshPage, 500);
-            } catch (error) {
-                alert('Error setting test data: ' + error.message);
+        // API Configuration
+        const apiConfig = {
+            baseUrl: window.location.hostname === 'localhost' ? 'http://localhost:3000' : '/api',
+            endpoints: {
+                picture: '/api/linkedin/picture',
+                conferenceAttendees: '/api/conference',
+                conferenceRegister: '/api/conference/register',
+                conferenceVisibility: '/api/conference/visibility'
             }
-        }
-        
-        // Function to clear all data from storage
-        function clearAllData() {
-            // Clear localStorage
-            localStorage.removeItem('linkedInUser');
-            localStorage.removeItem('conferenceId');
-            localStorage.removeItem('conferenceName');
-            localStorage.removeItem('conferenceLocation');
-            localStorage.removeItem('isAuthenticated');
-            localStorage.removeItem('authTime');
-            
-            // Clear sessionStorage
-            sessionStorage.removeItem('linkedInUser');
-            sessionStorage.removeItem('conferenceId');
-            sessionStorage.removeItem('conferenceName');
-            sessionStorage.removeItem('conferenceLocation');
-            sessionStorage.removeItem('isAuthenticated');
-            
-            alert('All authentication data cleared. Refreshing page...');
-            setTimeout(refreshPage, 500);
-        }
-        
-        // Check if authenticated
-        const isAuthenticated = localStorage.getItem('isAuthenticated') || sessionStorage.getItem('isAuthenticated');
-        let bypassAuth = false;
-        
-        // Check for URL parameter to bypass auth check (for testing)
-        const urlParams = new URLSearchParams(window.location.search);
-        if (urlParams.has('bypass_auth') && urlParams.get('bypass_auth') === 'true') {
-            bypassAuth = true;
-            console.log('Auth check bypassed via URL parameter');
-        }
-        
-        if (!isAuthenticated && !bypassAuth) {
-            console.error('User not authenticated, redirecting to auth page');
-            // Store this URL to redirect back after auth
-            sessionStorage.setItem('redirect_after_auth', window.location.href);
-            
-            // Show a message and redirect after a short delay
-            const redirectMessage = document.createElement('div');
-            redirectMessage.style.position = 'fixed';
-            redirectMessage.style.top = '0';
-            redirectMessage.style.left = '0';
-            redirectMessage.style.width = '100%';
-            redirectMessage.style.padding = '15px';
-            redirectMessage.style.backgroundColor = '#f8d7da';
-            redirectMessage.style.color = '#721c24';
-            redirectMessage.style.textAlign = 'center';
-            redirectMessage.style.zIndex = '9999';
-            redirectMessage.textContent = 'Not authenticated. Redirecting to login page...';
-            document.body.appendChild(redirectMessage);
-            
-            setTimeout(() => {
-                window.location.href = 'auth.html';
-            }, 2000);
-        } else {
-            console.log('User is authenticated:', isAuthenticated);
-            if (bypassAuth) {
-                document.getElementById('debug-info').innerHTML += '<strong style="color:red">WARNING: Auth check bypassed!</strong>\n';
-            }
-        }
-        
-        // Debug: Populate debug panel with all storage information
-        const debugInfo = document.getElementById('debug-info');
-        
-        let debugOutput = '---- LOCAL STORAGE ----\n';
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            let value = localStorage.getItem(key);
-            
-            // Truncate long JSON for display
-            if (value && value.length > 100 && (key === 'linkedInUser' || value.startsWith('{'))) {
-                try {
-                    const obj = JSON.parse(value);
-                    value = JSON.stringify(obj, null, 2).substring(0, 100) + '... (truncated)';
-                } catch (e) {
-                    value = value.substring(0, 100) + '... (truncated)';
-                }
-            }
-            
-            debugOutput += `${key}: ${value}\n`;
-        }
-        
-        debugOutput += '\n---- SESSION STORAGE ----\n';
-        for (let i = 0; i < sessionStorage.length; i++) {
-            const key = sessionStorage.key(i);
-            let value = sessionStorage.getItem(key);
-            
-            // Truncate long values
-            if (value && value.length > 100) {
-                value = value.substring(0, 100) + '... (truncated)';
-            }
-            
-            debugOutput += `${key}: ${value}\n`;
-        }
-        
-        debugOutput += '\n---- LOADED VALUES ----\n';
-        
-        // Load conference data from localStorage with fallbacks to sessionStorage
-        const conferenceId = localStorage.getItem('conferenceId') || sessionStorage.getItem('conferenceId') || 'default_conference';
-        const conferenceName = localStorage.getItem('conferenceName') || sessionStorage.getItem('conferenceName') || 'Sample Conference';
-        const conferenceLocation = localStorage.getItem('conferenceLocation') || sessionStorage.getItem('conferenceLocation') || 'Virtual Event';
-        
-        debugOutput += `conferenceId: ${conferenceId}\n`;
-        debugOutput += `conferenceName: ${conferenceName}\n`;
-        debugOutput += `conferenceLocation: ${conferenceLocation}\n`;
-        
-        // Load user profile data with fallback between localStorage and sessionStorage
-        let userProfileData = localStorage.getItem('linkedInUser');
-        if (!userProfileData) {
-            userProfileData = sessionStorage.getItem('linkedInUser');
-            debugOutput += `userProfileData source: sessionStorage\n`;
-        } else {
-            debugOutput += `userProfileData source: localStorage\n`;
-        }
-        
-        let profileName = 'No Profile Data';
-        let profileEmail = '';
-        let profileHeadline = '';
-        let profileImageUrl = '';
-        
-        if (userProfileData) {
-            try {
-                const profile = JSON.parse(userProfileData);
-                console.log('User profile loaded successfully:', profile);
-                
-                // Extract name (handling all LinkedIn API formats)
-                if (profile.name) {
-                    // OAuth format
-                    profileName = profile.name;
-                } else if (profile.firstName && profile.lastName) {
-                    if (typeof profile.firstName === 'object' && profile.firstName.localized) {
-                        // LinkedIn API v2 format
-                        const locale = profile.firstName.preferredLocale || { country: 'US', language: 'en' };
-                        const localeKey = locale.language + '_' + locale.country;
-                        const firstName = profile.firstName.localized[localeKey] || Object.values(profile.firstName.localized)[0];
-                        const lastName = profile.lastName.localized[localeKey] || Object.values(profile.lastName.localized)[0];
-                        profileName = firstName + ' ' + lastName;
-                    } else {
-                        // Simple format
-                        profileName = profile.firstName + ' ' + profile.lastName;
-                    }
-                } else if (profile.given_name && profile.family_name) {
-                    // OAuth 2.0 format
-                    profileName = profile.given_name + ' ' + profile.family_name;
-                }
-                
-                // Extract email (handling all LinkedIn API formats)
-                profileEmail = profile.email || profile.emailAddress || '';
-                
-                // Extract headline (handling all LinkedIn API formats)
-                profileHeadline = profile.headline || '';
-                
-                // Extract profile image (handling all LinkedIn API formats)
-                if (profile.picture) {
-                    // Direct picture URL from OAuth
-                    profileImageUrl = profile.picture;
-                } else if (profile.profilePicture) {
-                    if (typeof profile.profilePicture === 'string') {
-                        // Simple string URL
-                        profileImageUrl = profile.profilePicture;
-                    } else if (profile.profilePicture['displayImage~']) {
-                        // LinkedIn API v2 format
-                        const elements = profile.profilePicture['displayImage~'].elements;
-                        if (elements && elements.length > 0) {
-                            const identifiers = elements[0].identifiers;
-                            if (identifiers && identifiers.length > 0) {
-                                profileImageUrl = identifiers[0].identifier;
-                            }
-                        }
-                    }
-                } else if (profile.id) {
-                    // Use our proxy endpoint
-                    profileImageUrl = `http://localhost:3000/api/linkedin/picture/${profile.id}`;
-                } else {
-                    // Use default image if no ID
-                    profileImageUrl = 'https://randomuser.me/api/portraits/men/1.jpg';
-                }
-                
-                debugOutput += `profileName: ${profileName}\n`;
-                debugOutput += `profileEmail: ${profileEmail}\n`;
-                debugOutput += `profileHeadline: ${profileHeadline}\n`;
-                debugOutput += `profileImageUrl: ${profileImageUrl}\n`;
+        };
 
-                // Update the UI with profile data
-                updateProfileUI(profileName, profileEmail, profileHeadline, profileImageUrl);
-            } catch (error) {
-                console.error('Error parsing profile:', error);
-                debugOutput += `ERROR parsing profile: ${error.message}\n`;
+        // Function to get full API URL
+        function getApiUrl(endpoint, params = {}) {
+            let url = `${apiConfig.baseUrl}${endpoint}`;
+            const queryParams = new URLSearchParams();
+            for (const [key, value] of Object.entries(params)) {
+                queryParams.append(key, value);
             }
-        } else {
-            debugOutput += `NO USER PROFILE DATA FOUND\n`;
+            const queryString = queryParams.toString();
+            return queryString ? `${url}?${queryString}` : url;
         }
-        
-        // Set debug info in panel
-        debugInfo.textContent = debugOutput;
-        
-        // Debug: Dump all localStorage for inspection
-        console.log('---------------- DEBUG STORAGE ----------------');
-        console.log('All localStorage items:');
-        for (let i = 0; i < localStorage.length; i++) {
-            const key = localStorage.key(i);
-            console.log(`${key}: ${localStorage.getItem(key)}`);
-        }
-        
-        // Debug: Dump all sessionStorage for inspection
-        console.log('All sessionStorage items:');
-        for (let i = 0; i < sessionStorage.length; i++) {
-            const key = sessionStorage.key(i);
-            console.log(`${key}: ${sessionStorage.getItem(key)}`);
-        }
-        console.log('---------------- END DEBUG STORAGE ----------------');
-        
-        let allConnections = [];
-        
-        // Set conference info
-        document.getElementById('conference-name').textContent = conferenceName;
-        document.getElementById('conference-location').textContent = conferenceLocation;
-        
-        // Display user profile data
-        document.getElementById('profile-name').textContent = profileName;
-        document.getElementById('profile-email').textContent = profileEmail;
-        document.getElementById('profile-headline').textContent = profileHeadline;
-        
+
         // Function to generate connections from LinkedIn API
         async function generateConnections() {
             const conferenceId = localStorage.getItem('conferenceId');
@@ -674,7 +425,8 @@
                 
                 // Then, get the conference attendees
                 console.log('Fetching conference attendees...');
-                const attendeesResponse = await fetch(`http://localhost:3000/api/conference/${conferenceId}/attendees?currentUserId=${currentUserId}`);
+                const attendeesUrl = getApiUrl(`${apiConfig.endpoints.conferenceAttendees}/${conferenceId}/attendees`, { currentUserId });
+                const attendeesResponse = await fetch(attendeesUrl);
                 if (!attendeesResponse.ok) {
                     throw new Error('Failed to fetch conference attendees');
                 }
@@ -690,25 +442,14 @@
                     const profile = attendee.profile;
                     
                     if (profile) {
-                        // Use the profile data if available
-                        // IMPORTANT: Don't use IDs like 'Y14E4WLOPR' in profile URLs - they won't work
-                        // Instead, use vanityName or fall back to a search
-                        
-                        // Determine the best profile URL
                         let profileUrl;
                         
                         if (profile.vanityName && !profile.vanityName.match(/^[A-Z0-9]{8,12}$/i)) {
-                            // Use vanity name if it doesn't look like an internal ID
                             profileUrl = `https://www.linkedin.com/in/${profile.vanityName}`;
-                            console.log(`Using vanity name ${profile.vanityName} for profile URL`);
                         } else if (profile.publicProfileUrl && profile.publicProfileUrl.includes('/in/')) {
-                            // Use public profile URL if it has the proper format
                             profileUrl = profile.publicProfileUrl;
-                            console.log(`Using public profile URL ${profileUrl}`);
                         } else {
-                            // Otherwise we'll have to search for them by name
                             profileUrl = `search:${attendee.id}`;
-                            console.log(`No valid profile URL, will search by name`);
                         }
                         
                         return {
@@ -716,14 +457,12 @@
                             name: `${profile.firstName} ${profile.lastName}`,
                             title: profile.currentPosition?.title || profile.headline || 'Professional',
                             company: profile.currentPosition?.companyName || '',
-                            pictureUrl: profile.profilePicture || 'https://randomuser.me/api/portraits/men/1.jpg',
+                            pictureUrl: profile.profilePicture || getApiUrl(`${apiConfig.endpoints.picture}/${attendee.id}`),
                             profileUrl: profileUrl,
                             lastActive: Math.floor(Math.random() * 60) + 1,
-                            profile: profile // Pass the entire profile object
+                            profile: profile
                         };
                     } else {
-                        // Fallback for attendees without profile data
-                        console.log('No profile data for attendee:', attendee.id);
                         return {
                             id: attendee.id,
                             name: `Attendee ${attendee.id.substring(0, 6)}`,
@@ -736,20 +475,9 @@
                     }
                 });
 
-                console.log('Final conference attendees:', JSON.stringify(conferenceAttendees, null, 2));
-
                 return conferenceAttendees;
             } catch (error) {
-                console.error('Error fetching connections:', error);
-                // Show error message to user
-                const connectionsList = document.getElementById('connections-list');
-                connectionsList.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-exclamation-circle"></i>
-                        <p>Error loading connections: ${error.message}</p>
-                        <p>Please try refreshing the page.</p>
-                    </div>
-                `;
+                console.error('Error generating connections:', error);
                 return [];
             }
         }
@@ -1113,7 +841,7 @@
             const isVisible = localStorage.getItem('userVisibility') !== 'false';
 
             try {
-                const response = await fetch('http://localhost:3000/api/conference/register', {
+                const response = await fetch(getApiUrl(apiConfig.endpoints.conferenceRegister), {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1133,7 +861,7 @@
                 console.log('Successfully registered for conference');
             } catch (error) {
                 console.error('Error registering for conference:', error);
-                throw error; // Re-throw to be handled by the caller
+                throw error;
             }
         }
 
@@ -1147,7 +875,7 @@
                 // First ensure user is registered for the conference
                 await registerForConference();
                 
-                const response = await fetch('http://localhost:3000/api/conference/visibility', {
+                const response = await fetch(getApiUrl(apiConfig.endpoints.conferenceVisibility), {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1239,4 +967,10 @@
         }
     </script>
 </body>
-</html> 
+</html>
+<a href="/index.html">Home</a>
+<a href="/auth.html">Login</a>
+<a href="/connections.html">Connections</a>
+<a href="/callback.html">Callback</a>
+</body>
+</html>
