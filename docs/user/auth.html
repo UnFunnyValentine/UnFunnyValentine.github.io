@@ -106,14 +106,12 @@
         function loginWithLinkedIn() {
             // LinkedIn OAuth Configuration
             const LINKEDIN_CLIENT_ID = '86bd4udvjkab6n';
-            // Update this line in auth.html
             const REDIRECT_URI = 'https://unfunnyvalentine.github.io/docs/user/callback.html';
             
             // Required LinkedIn API scopes
             const LINKEDIN_SCOPES = [
-                'openid',
-                'profile',
-                'email'
+                'r_liteprofile',
+                'r_emailaddress'
             ].join(' ');
             
             // Get conference details from URL parameters
