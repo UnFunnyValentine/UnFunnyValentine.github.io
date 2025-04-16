@@ -162,8 +162,8 @@
                     conferenceLocation
                 });
 
-                // Redirect to the connections page or stored redirect URL
-                const redirectUrl = sessionStorage.getItem('redirect_after_auth') || 'connections.html';
+                // Redirect to the connections page with full path
+                const redirectUrl = sessionStorage.getItem('redirect_after_auth') || './connections.html';
                 window.location.href = redirectUrl;
             })
             .catch(error => {
